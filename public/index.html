@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGC Video Generator - สร้างคลิปรีวิวด้วย AI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🎬</span>
+                    <h1>UGC Video Generator</h1>
+                </div>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo"></span>
+                    <button class="btn btn-icon" id="btnSettings" title="Settings">⚙️</button>
+                    <button class="btn btn-icon btn-logout" id="btnLogout" title="Logout">🚪</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Tabs -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="input">📝 ข้อมูลสินค้า</button>
+                <button class="tab-btn" data-tab="script">💬 บทพูด</button>
+                <button class="tab-btn" data-tab="prompt">🎯 Video Prompt</button>
+                <button class="tab-btn" data-tab="video">🎬 สร้างวิดีโอ</button>
+                <button class="tab-btn" data-tab="result">✅ ผลลัพธ์</button>
+            </div>
+
+            <!-- Tab: Input -->
+            <div class="tab-content active" id="tab-input">
+                <div class="card">
+                    <h2 class="card-title">ข้อมูลสินค้า</h2>
+
+                    <div class="form-group">
+                        <label for="productName">ชื่อสินค้า *</label>
+                        <input type="text" id="productName" placeholder="เช่น เซรั่มวิตามินซี">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productDetails">รายละเอียดสินค้า *</label>
+                        <textarea id="productDetails" rows="4" placeholder="อธิบายจุดเด่น คุณสมบัติ และประโยชน์"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productImage">รูปสินค้า *</label>
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <input type="file" id="productImage" accept="image/jpeg,image/png,image/webp" hidden>
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <span class="upload-icon">📷</span>
+                                <p>คลิกหรือลากไฟล์มาวาง</p>
+                                <small>JPEG, PNG, WEBP (สูงสุด 10MB)</small>
+                            </div>
+                            <div class="image-preview" id="imagePreview" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview">
+                                <button type="button" class="btn-remove-image" id="removeImage">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reviewStyle">สไตล์การรีวิว *</label>
+                            <select id="reviewStyle">
+                                <option value="">-- เลือกสไตล์ --</option>
+                                <option value="ป้ายยา">ป้ายยา</option>
+                                <option value="แก้ปัญหา">แก้ปัญหา</option>
+                                <option value="ตลกขำขัน">ตลกขำขัน</option>
+                                <option value="ให้ความรู้">ให้ความรู้</option>
+                                <option value="เล่าเรื่อง/สตอรี่">เล่าเรื่อง/สตอรี่</option>
+                                <option value="ดราม่าติก่อนดีทีหลัง">ดราม่าติก่อนดีทีหลัง</option>
+                                <option value="เหตุผลเชิงคำถาม">เหตุผลเชิงคำถาม</option>
+                                <option value="ความรู้>ปัญหา>แก้ได้">ความรู้ > ปัญหา > แก้ได้</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reviewObjective">วัตถุประสงค์ *</label>
+                            <select id="reviewObjective">
+                                <option value="">-- เลือกวัตถุประสงค์ --</option>
+                                <option value="เพิ่มยอดขาย">เพิ่มยอดขาย</option>
+                                <option value="สร้างการรับรู้แบรนด์">สร้างการรับรู้แบรนด์</option>
+                                <option value="แนะนำสินค้าใหม่">แนะนำสินค้าใหม่</option>
+                                <option value="สร้างความน่าเชื่อถือ">สร้างความน่าเชื่อถือ</option>
+                                <option value="กระตุ้นการทดลองใช้">กระตุ้นการทดลองใช้</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="btnUploadAndGenerate">
+                            <span class="btn-text">📤 อัพโหลดและสร้างบทพูด</span>
+                            <span class="btn-loading" style="display: none;">⏳ กำลังดำเนินการ...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Script -->
+            <div class="tab-content" id="tab-script">
+                <div class="card">
+                    <h2 class="card-title">บทพูดและ Caption</h2>
+
+                    <div class="status-badge" id="scriptStatus">รอข้อมูล</div>
+
+                    <div class="form-group">
+                        <label>บทพูด (Script)</label>
+                        <textarea id="generatedScript" rows="5" placeholder="บทพูดจะแสดงที่นี่"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Caption พร้อมแฮชแท็ก</label>
+                        <textarea id="generatedCaption" rows="3" placeholder="Caption จะแสดงที่นี่"></textarea>
+                        <button type="button" class="btn btn-sm btn-outline" id="btnCopyCaption">📋 คัดลอก</button>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="btnGenerateVideoPrompt">
+                            <span class="btn-text">🎯 สร้าง Video Prompt</span>
+                            <span class="btn-loading" style="display: none;">⏳ กำลังสร้าง...</span>
+                        </button>
+                    </div>
+
+                    <!-- API Details -->
+                    <div class="api-details" id="scriptApiDetails" style="display: none;">
+                        <h3>📡 API Request/Response</h3>
+                        <div class="api-section">
+                            <h4>Request to OpenAI:</h4>
+                            <pre id="scriptApiRequest"></pre>
+                        </div>
+                        <div class="api-section">
+                            <h4>Response:</h4>
+                            <pre id="scriptApiResponse"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Prompt -->
+            <div class="tab-content" id="tab-prompt">
+                <div class="card">
+                    <h2 class="card-title">Video Prompt สำหรับ Sora2</h2>
+
+                    <div class="status-badge" id="promptStatus">รอข้อมูล</div>
+
+                    <div class="form-group">
+                        <label>Video Prompt (ภาษาอังกฤษ)</label>
+                        <textarea id="videoPrompt" rows="8" placeholder="Video Prompt จะแสดงที่นี่"></textarea>
+                    </div>
+
+                    <div class="prompt-preview">
+                        <h3>รูปภาพที่จะใช้:</h3>
+                        <div class="preview-image-container">
+                            <img id="promptPreviewImg" src="" alt="Product">
+                            <p id="uploadedImageUrl" class="image-url"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary btn-create-video" id="btnCreateVideo">
+                            <span class="btn-text">🎬 สร้างวิดีโอ</span>
+                            <span class="btn-loading" style="display: none;">⏳ กำลังส่งคำขอ...</span>
+                        </button>
+                    </div>
+
+                    <!-- API Details -->
+                    <div class="api-details" id="promptApiDetails" style="display: none;">
+                        <h3>📡 API Request/Response</h3>
+                        <div class="api-section">
+                            <h4>Request to OpenAI:</h4>
+                            <pre id="promptApiRequest"></pre>
+                        </div>
+                        <div class="api-section">
+                            <h4>Response:</h4>
+                            <pre id="promptApiResponse"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Video -->
+            <div class="tab-content" id="tab-video">
+                <div class="card">
+                    <h2 class="card-title">สถานะการสร้างวิดีโอ</h2>
+
+                    <div class="status-badge generating" id="videoStatus">รอคำสั่ง</div>
+
+                    <div class="video-progress">
+                        <div class="task-info">
+                            <p><strong>Task ID:</strong> <span id="taskIdDisplay">-</span></p>
+                            <p><strong>สถานะ:</strong> <span id="videoStateDisplay">-</span></p>
+                            <p><strong>เวลาที่ใช้:</strong> <span id="elapsedTime">0</span> วินาที</p>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- API Details -->
+                    <div class="api-details" id="videoApiDetails" style="display: none;">
+                        <h3>📡 API Request/Response</h3>
+                        <div class="api-section">
+                            <h4>Create Video Request to Kie.ai:</h4>
+                            <pre id="videoApiRequest"></pre>
+                        </div>
+                        <div class="api-section">
+                            <h4>Create Video Response:</h4>
+                            <pre id="videoApiResponse"></pre>
+                        </div>
+                        <div class="api-section">
+                            <h4>Status Check Response:</h4>
+                            <pre id="statusApiResponse"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Result -->
+            <div class="tab-content" id="tab-result">
+                <div class="card">
+                    <h2 class="card-title">ผลลัพธ์</h2>
+
+                    <div class="status-badge" id="resultStatus">รอวิดีโอ</div>
+
+                    <div class="result-container">
+                        <div class="video-container" id="videoContainer" style="display: none;">
+                            <video id="resultVideo" controls>
+                                <source src="" type="video/mp4">
+                            </video>
+                        </div>
+
+                        <div class="result-details">
+                            <div class="result-item">
+                                <h4>📝 Caption:</h4>
+                                <div class="result-caption" id="resultCaption"></div>
+                                <button type="button" class="btn btn-sm btn-outline" id="btnCopyResultCaption">📋 คัดลอก</button>
+                            </div>
+
+                            <div class="result-actions">
+                                <a href="" id="downloadVideoBtn" class="btn btn-primary" download style="display: none;">
+                                    ⬇️ ดาวน์โหลดวิดีโอ
+                                </a>
+                                <button type="button" class="btn btn-secondary" id="btnStartOver">
+                                    🔄 สร้างคลิปใหม่
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal" id="settingsModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚙️ ตั้งค่า API</h2>
+                    <button class="modal-close" id="closeSettings">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="settingOpenaiKey">OpenAI API Key</label>
+                        <input type="password" id="settingOpenaiKey" placeholder="sk-...">
+                        <small>ใช้สำหรับสร้างบทพูดและ Video Prompt</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="settingKieKey">Kie.ai API Key</label>
+                        <input type="password" id="settingKieKey" placeholder="API Key จาก kie.ai">
+                        <small>ใช้สำหรับอัพโหลดรูปและสร้างวิดีโอ</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="settingOpenaiModel">OpenAI Model</label>
+                        <select id="settingOpenaiModel">
+                            <option value="gpt-4o-mini">gpt-4o-mini (แนะนำ)</option>
+                            <option value="gpt-4o">gpt-4o</option>
+                            <option value="gpt-4-turbo">gpt-4-turbo</option>
+                            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="settingSora2Model">Sora2 Model</label>
+                        <select id="settingSora2Model">
+                            <option value="sora-2-image-to-video">sora-2-image-to-video</option>
+                        </select>
+                    </div>
+
+                    <div class="api-status">
+                        <p><strong>OpenAI:</strong> <span id="openaiStatus">-</span></p>
+                        <p><strong>Kie.ai:</strong> <span id="kieStatus">-</span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="btnSaveSettings">💾 บันทึก</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Log Panel -->
+        <div class="status-log" id="statusLog">
+            <div class="status-log-header">
+                <span class="status-log-icon">📋</span>
+                <span>Log การทำงาน</span>
+                <button class="status-log-toggle" id="toggleStatusLog">▼</button>
+            </div>
+            <div class="status-log-content" id="statusLogContent"></div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast">
+            <span class="toast-message" id="toastMessage"></span>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

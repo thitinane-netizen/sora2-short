@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST \"https://api.kie.ai/api/file-base64-upload\" -H \"Authorization: Bearer b718aa8eca1f87d760fc4612327e68ec\" -H \"Content-Type: application/json\" -d '{\"\"\"\"base64\"\"\"\":\"\"\"\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"\"\"\",\"\"\"\"filename\"\"\"\":\"\"\"\"test.png\"\"\"\"}')",
+      "WebFetch(domain:docs.kie.ai)",
+      "Bash(curl:*)",
+      "Bash(TOKEN=\"d9b7bfb423e22b18b64dbd90f48b8ead1d125a70ab1b5341ba41b3678b54b66f\")"
+    ]
+  }
+}
