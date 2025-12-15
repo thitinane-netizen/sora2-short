@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // User data file path
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
+const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
 
 // Default settings from .env (fallback)
 const defaultSettings = {
@@ -27,14 +27,18 @@ let currentUserSettings = { ...defaultSettings };
 // ============ USER MANAGEMENT FUNCTIONS ============
 
 function ensureDataDir() {
-    const dataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+    try {
+        const dataDir = path.join(process.cwd(), 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+    } catch (error) {
+        console.warn('Warning: Cannot create data directory (likely read-only filesystem). Data persistence will be disabled.');
     }
 }
 
 function loadUsers() {
-    ensureDataDir();
+    // ensureDataDir(); // Skip creating dir on load to avoid errors
     if (fs.existsSync(USERS_FILE)) {
         try {
             return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
@@ -46,8 +50,12 @@ function loadUsers() {
 }
 
 function saveUsers(users) {
-    ensureDataDir();
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    try {
+        ensureDataDir();
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    } catch (error) {
+        console.warn('Warning: Cannot save users (likely read-only filesystem). Data will be lost on restart.');
+    }
 }
 
 function hashPasscode(passcode) {
