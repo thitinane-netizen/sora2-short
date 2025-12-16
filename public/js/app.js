@@ -570,6 +570,7 @@ class UGCVideoApp {
                 document.getElementById('settingOpenaiModel').value = result.data.openaiModel;
                 document.getElementById('settingSora2Model').value = result.data.sora2Model;
                 document.getElementById('settingVideoPromptRule').value = result.data.videoPromptRule || '';
+                document.getElementById('settingScriptGenerationRule').value = result.data.scriptGenerationRule || '';
                 document.getElementById('openaiStatus').textContent = result.data.hasOpenaiKey ? '✅ พร้อมใช้งาน' : '❌ ยังไม่ตั้งค่า';
                 document.getElementById('kieStatus').textContent = result.data.hasKieKey ? '✅ พร้อมใช้งาน' : '❌ ยังไม่ตั้งค่า';
             }
@@ -593,7 +594,8 @@ class UGCVideoApp {
             kieApiKey: document.getElementById('settingKieKey').value.trim() || undefined,
             openaiModel: document.getElementById('settingOpenaiModel').value,
             sora2Model: document.getElementById('settingSora2Model').value,
-            videoPromptRule: document.getElementById('settingVideoPromptRule').value.trim()
+            videoPromptRule: document.getElementById('settingVideoPromptRule').value.trim(),
+            scriptGenerationRule: document.getElementById('settingScriptGenerationRule').value.trim()
         };
 
         try {

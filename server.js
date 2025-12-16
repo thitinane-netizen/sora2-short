@@ -21,7 +21,9 @@ const defaultSettings = {
     openaiModel: 'gpt-4o-mini',
     openaiModel: 'gpt-4o-mini',
     sora2Model: 'sora-2-image-to-video',
-    videoPromptRule: 'Cinematic lighting, 4k quality, highly detailed, photorealistic, natural lighting'
+    sora2Model: 'sora-2-image-to-video',
+    videoPromptRule: 'Cinematic lighting, 4k quality, highly detailed, photorealistic, natural lighting',
+    scriptGenerationRule: ''
 };
 
 // Current user settings (will be set per request based on token)
@@ -105,7 +107,10 @@ function authMiddleware(req, res, next) {
             kieApiKey: user.kieApiKey || defaultSettings.kieApiKey,
             openaiModel: user.openaiModel || defaultSettings.openaiModel,
             sora2Model: user.sora2Model || defaultSettings.sora2Model,
-            videoPromptRule: user.videoPromptRule || defaultSettings.videoPromptRule
+            openaiModel: user.openaiModel || defaultSettings.openaiModel,
+            sora2Model: user.sora2Model || defaultSettings.sora2Model,
+            videoPromptRule: user.videoPromptRule || defaultSettings.videoPromptRule,
+            scriptGenerationRule: user.scriptGenerationRule || defaultSettings.scriptGenerationRule
         };
         req.user = user;
     } else {
@@ -159,6 +164,7 @@ app.post('/api/auth/register', (req, res) => {
         openaiModel: 'gpt-4o-mini',
         sora2Model: 'sora-2-image-to-video',
         videoPromptRule: '',
+        scriptGenerationRule: '',
         createdAt: new Date().toISOString()
     };
 
@@ -295,6 +301,7 @@ app.get('/api/settings', (req, res) => {
             openaiModel: currentUserSettings.openaiModel,
             sora2Model: currentUserSettings.sora2Model,
             videoPromptRule: currentUserSettings.videoPromptRule,
+            scriptGenerationRule: currentUserSettings.scriptGenerationRule,
             hasOpenaiKey: !!currentUserSettings.openaiApiKey,
             hasKieKey: !!currentUserSettings.kieApiKey
         }
@@ -302,7 +309,7 @@ app.get('/api/settings', (req, res) => {
 });
 
 app.post('/api/settings', requireLogin, (req, res) => {
-    const { openaiApiKey, kieApiKey, openaiModel, sora2Model, videoPromptRule } = req.body;
+    const { openaiApiKey, kieApiKey, openaiModel, sora2Model, videoPromptRule, scriptGenerationRule } = req.body;
 
     // Save to user's data
     const users = loadUsers();
@@ -313,6 +320,7 @@ app.post('/api/settings', requireLogin, (req, res) => {
     if (openaiModel) user.openaiModel = openaiModel;
     if (sora2Model) user.sora2Model = sora2Model;
     if (videoPromptRule !== undefined) user.videoPromptRule = videoPromptRule;
+    if (scriptGenerationRule !== undefined) user.scriptGenerationRule = scriptGenerationRule;
 
     saveUsers(users);
 
@@ -322,6 +330,7 @@ app.post('/api/settings', requireLogin, (req, res) => {
     currentUserSettings.openaiModel = user.openaiModel;
     currentUserSettings.sora2Model = user.sora2Model;
     currentUserSettings.videoPromptRule = user.videoPromptRule;
+    currentUserSettings.scriptGenerationRule = user.scriptGenerationRule;
 
     res.json({
         success: true,
@@ -403,23 +412,7 @@ app.post('/api/generate-script', async (req, res) => {
         const systemPrompt = `คุณเป็นผู้เชี่ยวชาญสร้างคอนเทนต์รีวิวสินค้าภาษาไทย โดยต้องปฏิบัติตามกฎอย่างเคร่งครัด:
 
 🔴 กฎทองสำหรับ AI นางแบบรีวิวสินค้า:
-1. พูดได้: อธิบายฟีเจอร์ + ข้อมูลที่มีจริง + ตัวอย่างจำลอง
-2. ห้ามพูด: ประสบการณ์จริง + ผลลัพธ์จริง + การรับรองประสิทธิภาพ
-3. ถ้าข้อความทำให้คน "เข้าใจผิดว่ามีคนลองแล้ว" = ห้ามพูด
-
-✅ คำพูดที่ใช้ได้:
-- "นี่คือข้อมูลสำคัญของสินค้า…"
-- "ผลิตภัณฑ์นี้ถูกออกแบบมาเพื่อ…"
-- "คุณสมบัติที่น่าสนใจคือ…"
-- "เหมาะสำหรับคนที่กำลังมองหา…"
-- "นี่เป็นภาพจำลองเพื่อแสดงฟีเจอร์ของสินค้า…"
-
-❌ คำพูดที่ห้ามใช้เด็ดขาด:
-- "ฉันลองใช้แล้วดีมากค่ะ"
-- "ใช้มาเดือนหนึ่งและเห็นผลจริงๆ"
-- "รับรองว่าใช้แล้วได้ผลแน่นอน!"
-- "ดีกว่าทุกตัวที่ฉันเคยใช้"
-- "ใช้แล้วผิวขาวขึ้นทันที"
+${currentUserSettings.scriptGenerationRule || '1. พูดได้: อธิบายฟีเจอร์ + ข้อมูลที่มีจริง\n2. ห้ามพูด: ประสบการณ์จริง + ผลลัพธ์จริง + การรับรองประสิทธิภาพ\n3. ถ้าข้อความทำให้คน "เข้าใจผิดว่ามีคนลองแล้ว" = ห้ามพูด'}
 
 ตอบเป็น JSON เท่านั้น`;
 

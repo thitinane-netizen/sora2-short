@@ -314,6 +314,13 @@
                         <small>ข้อความนี้จะถูกส่งไปกำกับ AI ทุกครั้งที่สร้าง Video Prompt</small>
                     </div>
 
+                    <div class="form-group">
+                        <label for="settingScriptGenerationRule">Script Guidelines (ข้อควรระวังในการพูด)</label>
+                        <textarea id="settingScriptGenerationRule" rows="10"
+                            placeholder="กำหนดกฎการพูด สิ่งที่พูดได้ และห้ามพูด..."></textarea>
+                        <small>กฎเหล่านี้จะถูกส่งไปให้ AI ใช้สร้างบทพูด (สามารถคัดลอกไฟล์ Markdown มาวางได้เลย)</small>
+                    </div>
+
                     <div class="api-status">
                         <p><strong>OpenAI:</strong> <span id="openaiStatus">-</span></p>
                         <p><strong>Kie.ai:</strong> <span id="kieStatus">-</span></p>
