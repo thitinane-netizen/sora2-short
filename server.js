@@ -412,7 +412,7 @@ app.post('/api/generate-script', async (req, res) => {
 
 ตอบเป็น JSON เท่านั้น`;
 
-        const userPrompt = `สร้างบทพูดภาษาไทยสำหรับคลิป UGC ความยาว 15 วินาที
+        const userPrompt = `สร้างบทพูดภาษาไทยสำหรับคลิป UGC ความยาว 10 วินาที (เน้นสั้นกระชับ ไม่เกิน 2-3 ประโยค)
 
 ข้อมูลสินค้า:
 - ชื่อสินค้า: ${productName}
