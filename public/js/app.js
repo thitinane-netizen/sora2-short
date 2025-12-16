@@ -104,6 +104,7 @@ class UGCVideoApp {
 
         // Main actions
         document.getElementById('btnUploadAndGenerate').addEventListener('click', () => this.uploadAndGenerateScript());
+        document.getElementById('btnUploadAndManualPrompt').addEventListener('click', () => this.uploadAndManualPrompt());
         document.getElementById('btnGenerateVideoPrompt').addEventListener('click', () => this.generateVideoPrompt());
         document.getElementById('btnCreateVideo').addEventListener('click', () => this.createVideo());
         document.getElementById('btnStartOver').addEventListener('click', () => this.startOver());
@@ -304,6 +305,64 @@ class UGCVideoApp {
 
             this.logStatus('บทพูด', 'สร้างบทพูดสำเร็จ!', 'success');
             this.switchTab('script');
+
+        } catch (error) {
+            this.logStatus('ข้อผิดพลาด', error.message, 'error');
+            this.showToast('เกิดข้อผิดพลาด: ' + error.message);
+        } finally {
+            this.setButtonLoading(btn, false);
+        }
+    }
+
+    async uploadAndManualPrompt() {
+        if (!this.uploadedImage) {
+            this.showToast('กรุณาเลือกรูปภาพก่อน');
+            this.logStatus('ตรวจสอบ', 'ยังไม่ได้เลือกรูปภาพ', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('btnUploadAndManualPrompt');
+        this.setButtonLoading(btn, true);
+
+        try {
+            // Upload image to Kie.ai
+            this.logStatus('อัพโหลด', 'กำลังอัพโหลดรูปไป Kie.ai...', 'loading');
+
+            const formData = new FormData();
+            formData.append('image', this.uploadedImage);
+
+            const headers = this.getConfigHeaders();
+            delete headers['Content-Type'];
+
+            const uploadResponse = await fetch('/api/upload-image', {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+            const uploadResult = await uploadResponse.json();
+
+            if (!uploadResult.success) {
+                throw new Error(uploadResult.error);
+            }
+
+            this.uploadedImageUrl = uploadResult.data.url;
+            document.getElementById('uploadedImageUrl').textContent = this.uploadedImageUrl;
+            this.logStatus('อัพโหลด', `สำเร็จ! URL: ${this.uploadedImageUrl}`, 'success');
+
+            // Skip script generation, go to Prompt tab
+            this.generatedScript = '';
+            this.generatedCaption = '';
+            document.getElementById('generatedScript').value = '';
+            document.getElementById('generatedCaption').value = '';
+            document.getElementById('videoPrompt').value = ''; // Clear prompt for manual entry
+
+            // Update status indications to show skipped
+            document.getElementById('scriptStatus').textContent = '⏭️ ข้าม';
+            document.getElementById('scriptStatus').className = 'status-badge';
+
+            this.logStatus('ระบบ', 'เข้าสู่โหมด Manual Prompt', 'info');
+            this.switchTab('prompt');
+            this.showToast('อัพโหลดสำเร็จ! กรุณาเขียน Prompt เองได้เลย');
 
         } catch (error) {
             this.logStatus('ข้อผิดพลาด', error.message, 'error');
