@@ -65,7 +65,7 @@ class UGCVideoApp {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
-        } catch (e) {}
+        } catch (e) { }
 
         localStorage.removeItem('ugc_token');
         localStorage.removeItem('ugc_email');
@@ -139,6 +139,18 @@ class UGCVideoApp {
             content.style.display = content.style.display === 'none' ? 'block' : 'none';
             btn.textContent = content.style.display === 'none' ? '▲' : '▼';
         });
+
+        // Custom Inputs Logic
+        const handleCustomSelect = (selectId, inputId) => {
+            const select = document.getElementById(selectId);
+            const input = document.getElementById(inputId);
+            select.addEventListener('change', () => {
+                input.style.display = select.value === 'custom' ? 'block' : 'none';
+                if (select.value === 'custom') input.focus();
+            });
+        };
+        handleCustomSelect('reviewStyle', 'customReviewStyle');
+        handleCustomSelect('reviewObjective', 'customReviewObjective');
     }
 
     switchTab(tabName) {
@@ -162,12 +174,12 @@ class UGCVideoApp {
 
         if (file.size > 10 * 1024 * 1024) {
             this.showToast('ไฟล์ต้องไม่เกิน 10MB');
-            this.logStatus('รูปภาพ', `ไฟล์ใหญ่เกิน: ${(file.size/1024/1024).toFixed(2)} MB`, 'error');
+            this.logStatus('รูปภาพ', `ไฟล์ใหญ่เกิน: ${(file.size / 1024 / 1024).toFixed(2)} MB`, 'error');
             return;
         }
 
         this.uploadedImage = file;
-        this.logStatus('รูปภาพ', `เลือกรูป: ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'success');
+        this.logStatus('รูปภาพ', `เลือกรูป: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'success');
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -191,8 +203,16 @@ class UGCVideoApp {
     async uploadAndGenerateScript() {
         const productName = document.getElementById('productName').value.trim();
         const productDetails = document.getElementById('productDetails').value.trim();
-        const reviewStyle = document.getElementById('reviewStyle').value;
-        const reviewObjective = document.getElementById('reviewObjective').value;
+
+        let reviewStyle = document.getElementById('reviewStyle').value;
+        if (reviewStyle === 'custom') {
+            reviewStyle = document.getElementById('customReviewStyle').value.trim();
+        }
+
+        let reviewObjective = document.getElementById('reviewObjective').value;
+        if (reviewObjective === 'custom') {
+            reviewObjective = document.getElementById('customReviewObjective').value.trim();
+        }
 
         // Validate
         const missing = [];
@@ -549,6 +569,7 @@ class UGCVideoApp {
             if (result.success) {
                 document.getElementById('settingOpenaiModel').value = result.data.openaiModel;
                 document.getElementById('settingSora2Model').value = result.data.sora2Model;
+                document.getElementById('settingVideoPromptRule').value = result.data.videoPromptRule || '';
                 document.getElementById('openaiStatus').textContent = result.data.hasOpenaiKey ? '✅ พร้อมใช้งาน' : '❌ ยังไม่ตั้งค่า';
                 document.getElementById('kieStatus').textContent = result.data.hasKieKey ? '✅ พร้อมใช้งาน' : '❌ ยังไม่ตั้งค่า';
             }
@@ -571,7 +592,8 @@ class UGCVideoApp {
             openaiApiKey: document.getElementById('settingOpenaiKey').value.trim() || undefined,
             kieApiKey: document.getElementById('settingKieKey').value.trim() || undefined,
             openaiModel: document.getElementById('settingOpenaiModel').value,
-            sora2Model: document.getElementById('settingSora2Model').value
+            sora2Model: document.getElementById('settingSora2Model').value,
+            videoPromptRule: document.getElementById('settingVideoPromptRule').value.trim()
         };
 
         try {

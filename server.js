@@ -19,7 +19,9 @@ const defaultSettings = {
     openaiApiKey: process.env.OPENAI_API_KEY || '',
     kieApiKey: process.env.KIE_API_KEY || '',
     openaiModel: 'gpt-4o-mini',
-    sora2Model: 'sora-2-image-to-video'
+    openaiModel: 'gpt-4o-mini',
+    sora2Model: 'sora-2-image-to-video',
+    videoPromptRule: ''
 };
 
 // Current user settings (will be set per request based on token)
@@ -100,7 +102,10 @@ function authMiddleware(req, res, next) {
             openaiApiKey: user.openaiApiKey || defaultSettings.openaiApiKey,
             kieApiKey: user.kieApiKey || defaultSettings.kieApiKey,
             openaiModel: user.openaiModel || defaultSettings.openaiModel,
-            sora2Model: user.sora2Model || defaultSettings.sora2Model
+            kieApiKey: user.kieApiKey || defaultSettings.kieApiKey,
+            openaiModel: user.openaiModel || defaultSettings.openaiModel,
+            sora2Model: user.sora2Model || defaultSettings.sora2Model,
+            videoPromptRule: user.videoPromptRule || defaultSettings.videoPromptRule
         };
         req.user = user;
     } else {
@@ -153,6 +158,7 @@ app.post('/api/auth/register', (req, res) => {
         kieApiKey: kieApiKey || '',
         openaiModel: 'gpt-4o-mini',
         sora2Model: 'sora-2-image-to-video',
+        videoPromptRule: '',
         createdAt: new Date().toISOString()
     };
 
@@ -286,7 +292,9 @@ app.get('/api/settings', (req, res) => {
             openaiApiKey: currentUserSettings.openaiApiKey ? '***' + currentUserSettings.openaiApiKey.slice(-8) : '',
             kieApiKey: currentUserSettings.kieApiKey ? '***' + currentUserSettings.kieApiKey.slice(-8) : '',
             openaiModel: currentUserSettings.openaiModel,
+            openaiModel: currentUserSettings.openaiModel,
             sora2Model: currentUserSettings.sora2Model,
+            videoPromptRule: currentUserSettings.videoPromptRule,
             hasOpenaiKey: !!currentUserSettings.openaiApiKey,
             hasKieKey: !!currentUserSettings.kieApiKey
         }
@@ -294,7 +302,7 @@ app.get('/api/settings', (req, res) => {
 });
 
 app.post('/api/settings', requireLogin, (req, res) => {
-    const { openaiApiKey, kieApiKey, openaiModel, sora2Model } = req.body;
+    const { openaiApiKey, kieApiKey, openaiModel, sora2Model, videoPromptRule } = req.body;
 
     // Save to user's data
     const users = loadUsers();
@@ -304,6 +312,7 @@ app.post('/api/settings', requireLogin, (req, res) => {
     if (kieApiKey !== undefined) user.kieApiKey = kieApiKey;
     if (openaiModel) user.openaiModel = openaiModel;
     if (sora2Model) user.sora2Model = sora2Model;
+    if (videoPromptRule !== undefined) user.videoPromptRule = videoPromptRule;
 
     saveUsers(users);
 
@@ -312,6 +321,7 @@ app.post('/api/settings', requireLogin, (req, res) => {
     currentUserSettings.kieApiKey = user.kieApiKey || defaultSettings.kieApiKey;
     currentUserSettings.openaiModel = user.openaiModel;
     currentUserSettings.sora2Model = user.sora2Model;
+    currentUserSettings.videoPromptRule = user.videoPromptRule;
 
     res.json({
         success: true,
@@ -387,6 +397,7 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
 app.post('/api/generate-script', async (req, res) => {
     try {
         const { productName, productDetails, reviewStyle, reviewObjective } = req.body;
+        // Use custom style if not in map
         const styleDescription = reviewStyles[reviewStyle] || reviewStyle;
 
         const systemPrompt = `คุณเป็นผู้เชี่ยวชาญสร้างคอนเทนต์รีวิวสินค้าภาษาไทย โดยต้องปฏิบัติตามกฎอย่างเคร่งครัด:
@@ -494,7 +505,10 @@ app.post('/api/generate-video-prompt', async (req, res) => {
         const systemPrompt = `You are an expert at creating video prompts for Sora AI video generation.
 Your task is to create a detailed video prompt that describes the visual scene, motion, AND includes the Thai dialogue.
 The video will be a UGC-style product review.
-IMPORTANT: The final prompt MUST include the Thai script as the spoken dialogue.`;
+IMPORTANT: The final prompt MUST include the Thai script as the spoken dialogue.
+
+USER DEFINED RULES (Apply these strictly):
+${currentUserSettings.videoPromptRule || 'No specific custom rules.'}`;
 
         const userPrompt = `Create a detailed VIDEO PROMPT for Sora AI to generate a 15-second UGC product review video.
 

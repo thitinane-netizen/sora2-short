@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UGC Video Generator - สร้างคลิปรีวิวด้วย AI</title>
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -46,7 +50,8 @@
 
                     <div class="form-group">
                         <label for="productDetails">รายละเอียดสินค้า *</label>
-                        <textarea id="productDetails" rows="4" placeholder="อธิบายจุดเด่น คุณสมบัติ และประโยชน์"></textarea>
+                        <textarea id="productDetails" rows="4"
+                            placeholder="อธิบายจุดเด่น คุณสมบัติ และประโยชน์"></textarea>
                     </div>
 
                     <div class="form-group">
@@ -78,7 +83,10 @@
                                 <option value="ดราม่าติก่อนดีทีหลัง">ดราม่าติก่อนดีทีหลัง</option>
                                 <option value="เหตุผลเชิงคำถาม">เหตุผลเชิงคำถาม</option>
                                 <option value="ความรู้>ปัญหา>แก้ได้">ความรู้ > ปัญหา > แก้ได้</option>
+                                <option value="custom">✨ กำหนดเอง...</option>
                             </select>
+                            <input type="text" id="customReviewStyle" placeholder="ระบุสไตล์การรีวิวที่ต้องการ..."
+                                style="display: none; margin-top: 5px;">
                         </div>
 
                         <div class="form-group">
@@ -90,7 +98,10 @@
                                 <option value="แนะนำสินค้าใหม่">แนะนำสินค้าใหม่</option>
                                 <option value="สร้างความน่าเชื่อถือ">สร้างความน่าเชื่อถือ</option>
                                 <option value="กระตุ้นการทดลองใช้">กระตุ้นการทดลองใช้</option>
+                                <option value="custom">✨ กำหนดเอง...</option>
                             </select>
+                            <input type="text" id="customReviewObjective" placeholder="ระบุวัตถุประสงค์..."
+                                style="display: none; margin-top: 5px;">
                         </div>
                     </div>
 
@@ -240,11 +251,13 @@
                             <div class="result-item">
                                 <h4>📝 Caption:</h4>
                                 <div class="result-caption" id="resultCaption"></div>
-                                <button type="button" class="btn btn-sm btn-outline" id="btnCopyResultCaption">📋 คัดลอก</button>
+                                <button type="button" class="btn btn-sm btn-outline" id="btnCopyResultCaption">📋
+                                    คัดลอก</button>
                             </div>
 
                             <div class="result-actions">
-                                <a href="" id="downloadVideoBtn" class="btn btn-primary" download style="display: none;">
+                                <a href="" id="downloadVideoBtn" class="btn btn-primary" download
+                                    style="display: none;">
                                     ⬇️ ดาวน์โหลดวิดีโอ
                                 </a>
                                 <button type="button" class="btn btn-secondary" id="btnStartOver">
@@ -294,6 +307,13 @@
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label for="settingVideoPromptRule">Video Prompt Rule (กฎเพิ่มเติม)</label>
+                        <textarea id="settingVideoPromptRule" rows="3"
+                            placeholder="เช่น ต้องมีแสง cinematic, ห้ามมีคนเดินผ่านฉาก, เน้นโทนสีอบอุ่น..."></textarea>
+                        <small>ข้อความนี้จะถูกส่งไปกำกับ AI ทุกครั้งที่สร้าง Video Prompt</small>
+                    </div>
+
                     <div class="api-status">
                         <p><strong>OpenAI:</strong> <span id="openaiStatus">-</span></p>
                         <p><strong>Kie.ai:</strong> <span id="kieStatus">-</span></p>
@@ -323,4 +343,5 @@
 
     <script src="js/app.js"></script>
 </body>
+
 </html>
