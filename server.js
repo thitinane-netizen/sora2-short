@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // User data file path
 const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+let MEMORY_USERS = null; // In-memory cache for Vercel persistence
 
 // Default settings from .env (fallback)
 const defaultSettings = {
@@ -38,18 +39,29 @@ function ensureDataDir() {
 }
 
 function loadUsers() {
+    // Return memory cache if available (Fix for Vercel read-only)
+    if (MEMORY_USERS !== null) {
+        return MEMORY_USERS;
+    }
+
     // ensureDataDir(); // Skip creating dir on load to avoid errors
     if (fs.existsSync(USERS_FILE)) {
         try {
-            return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+            const data = fs.readFileSync(USERS_FILE, 'utf8');
+            MEMORY_USERS = JSON.parse(data); // Cache it
+            return MEMORY_USERS;
         } catch (e) {
+            MEMORY_USERS = {};
             return {};
         }
     }
+    MEMORY_USERS = {};
     return {};
 }
 
 function saveUsers(users) {
+    MEMORY_USERS = users; // Update cache first
+
     try {
         ensureDataDir();
         fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
