@@ -1,11 +1,12 @@
 {
-  "thitinan_b@hotmail.com": {
-    "passcodeHash": "655e1529dee1b3e4d358b77e0c4380a68a218104547bb90fb3286ececd04e8d9",
-    "token": "db350a04b4ec0ed431eb369ba9dba25ad1a84037909133afb2ea144ad75c7ec2",
-    "openaiApiKey": "-",
-    "kieApiKey": "-",
+  "demo@ugc.com": {
+    "passcodeHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+    "token": "demo-token-constant-for-persistence",
+    "openaiApiKey": "",
+    "kieApiKey": "",
     "openaiModel": "gpt-4o-mini",
     "sora2Model": "sora-2-image-to-video",
-    "createdAt": "2025-12-15T14:11:14.721Z"
+    "videoPromptRule": "Cinematic lighting, 4k quality, highly detailed, photorealistic, natural lighting",
+    "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }

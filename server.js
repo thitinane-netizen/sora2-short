@@ -21,7 +21,7 @@ const defaultSettings = {
     openaiModel: 'gpt-4o-mini',
     openaiModel: 'gpt-4o-mini',
     sora2Model: 'sora-2-image-to-video',
-    videoPromptRule: ''
+    videoPromptRule: 'Cinematic lighting, 4k quality, highly detailed, photorealistic, natural lighting'
 };
 
 // Current user settings (will be set per request based on token)
