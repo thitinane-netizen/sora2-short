@@ -106,7 +106,7 @@ function getSettings() {
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // ============ AUTH API ENDPOINTS ============
 
@@ -236,7 +236,7 @@ function requireLogin(req, res, next) {
 }
 
 // Serve static files after auth check
-app.use(express.static('public'));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Multer config for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for base64 conversion
@@ -643,7 +643,7 @@ app.get('/api/video-status/:taskId', async (req, res) => {
 
 // Serve main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 // Error handling middleware
