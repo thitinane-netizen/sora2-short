@@ -16,9 +16,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Configure Multer for temp uploads
+// Configure Multer for memory storage (required for Base64 conversion)
+const storage = multer.memoryStorage();
 const upload = multer({
-    dest: '/tmp', // Vercel compliant temp dir
+    storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
@@ -87,7 +88,7 @@ const deleteFile = (filePath) => {
 
 // --- API Endpoints ---
 
-// Upload Image to Kie.ai
+// Upload Image to Kie.ai (Base64)
 app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, error: 'No image file uploaded' });
@@ -95,32 +96,50 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
 
     const { kieApiKey } = getApiKeys(req);
     if (!kieApiKey) {
-        deleteFile(req.file.path);
         return res.status(400).json({ success: false, error: 'Missing Kie.ai API Key' });
     }
 
     try {
-        const fileStream = fs.createReadStream(req.file.path);
-        const data = new FormData();
-        data.append('file', fileStream);
+        // Convert to base64 with data URI prefix
+        const base64Data = req.file.buffer.toString('base64');
+        const mimeType = req.file.mimetype;
+        const base64DataUri = `data:${mimeType};base64,${base64Data}`;
 
-        const response = await axios.post('https://api.kie.ai/files', data, {
+        // Upload to Kie.ai File Upload API
+        const uploadEndpoint = 'https://kieai.redpandaai.co/api/file-base64-upload';
+        const requestBody = {
+            base64Data: base64DataUri,
+            uploadPath: 'ugc-images',
+            fileName: req.file.originalname || 'image.jpg'
+        };
+
+        const response = await axios.post(uploadEndpoint, requestBody, {
             headers: {
                 'Authorization': `Bearer ${kieApiKey}`,
-                ...data.getHeaders()
+                'Content-Type': 'application/json'
             }
         });
 
-        // Clean up temp file
-        deleteFile(req.file.path);
+        if (response.data.success || response.data.code === 200) {
+            // API returns downloadUrl, not fileUrl
+            const fileUrl = response.data.data?.downloadUrl || response.data.data?.fileUrl || response.data.data?.url;
 
-        res.json({ success: true, data: response.data });
+            res.json({
+                success: true,
+                data: {
+                    url: fileUrl,
+                    filename: req.file.originalname
+                }
+            });
+        } else {
+            throw new Error(response.data.msg || 'Upload failed');
+        }
+
     } catch (error) {
-        deleteFile(req.file.path);
         console.error('Kie Upload Error:', error.response?.data || error.message);
         res.status(500).json({
             success: false,
-            error: error.response?.data?.message || error.message || 'Upload failed'
+            error: error.response?.data?.msg || error.message || 'Upload failed'
         });
     }
 });
@@ -162,10 +181,9 @@ app.post('/api/generate-script', async (req, res) => {
 
         const content = response.data.choices[0]?.message?.content || '';
 
+        // Basic split logic
         let script = content;
         let caption = '';
-
-        // Basic split logic if both are in one response
         if (content.includes('Caption') || content.includes('2.')) {
             const parts = content.split(/Caption|2\./i);
             script = parts[0] || content;
@@ -201,8 +219,7 @@ The video will be a UGC-style product review.
 IMPORTANT: The final prompt MUST include the Thai script as the spoken dialogue.
 
 GUILELINES:
-${effectiveRule}
-`;
+${effectiveRule}`;
 
     const userPrompt = `Product: ${productName}
 Details: ${productDetails}
@@ -252,31 +269,37 @@ app.post('/api/create-video', async (req, res) => {
     const model = sora2Model || defaultSettings.sora2Model;
 
     try {
-        const apiRequest = {
+        const kieRequest = {
             model: model,
-            prompt: videoPrompt,
-            image_urls: [imageUrl],
-            aspect_ratio: "9:16",
-            duration_seconds: 5
+            input: {
+                prompt: videoPrompt,
+                image_urls: [imageUrl],
+                aspect_ratio: 'portrait',
+                n_frames: '15'
+            }
         };
 
-        const response = await axios.post('https://api.kie.ai/video/sora/generations', apiRequest, {
+        const response = await axios.post('https://api.kie.ai/api/v1/jobs/createTask', kieRequest, {
             headers: {
                 'Authorization': `Bearer ${kieApiKey}`,
                 'Content-Type': 'application/json'
             }
         });
 
-        res.json({
-            success: true,
-            data: { taskId: response.data.id },
-            apiRequest,
-            apiResponse: response.data
-        });
+        if (response.data.code === 200) {
+            res.json({
+                success: true,
+                data: { taskId: response.data.data.taskId },
+                apiRequest: kieRequest,
+                apiResponse: response.data
+            });
+        } else {
+            throw new Error(response.data.msg || 'Unknown error from Kie.ai');
+        }
 
     } catch (error) {
-        console.error('Kie Video Error:', error.response?.data || error.message);
-        res.status(500).json({ success: false, error: error.response?.data?.message || 'Video creation failed' });
+        console.error('Create video error:', error.response?.data || error.message);
+        res.status(500).json({ success: false, error: error.response?.data?.msg || error.message });
     }
 });
 
@@ -288,15 +311,20 @@ app.get('/api/video-status/:taskId', async (req, res) => {
     if (!kieApiKey) return res.status(400).json({ success: false, error: 'Missing Kie.ai API Key' });
 
     try {
-        const response = await axios.get(`https://api.kie.ai/video/sora/generations/${taskId}`, {
+        const response = await axios.get('https://api.kie.ai/api/v1/jobs/recordInfo', {
+            params: { taskId },
             headers: { 'Authorization': `Bearer ${kieApiKey}` }
         });
 
-        res.json({ success: true, data: response.data });
+        res.json({
+            success: true,
+            data: response.data.data,
+            apiResponse: response.data
+        });
 
     } catch (error) {
-        console.error('Kie Status Error:', error.response?.data || error.message);
-        res.status(500).json({ success: false, error: error.response?.data?.message || 'Status check failed' });
+        console.error('Check status error:', error.response?.data || error.message);
+        res.status(500).json({ success: false, error: error.response?.data?.msg || error.message });
     }
 });
 
